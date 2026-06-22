@@ -5,17 +5,17 @@
 const SighUI = (function () {
   const ids = ["status", "meterFill", "meterPct", "targetName", "hint", "count",
     "counterCard", "reaction", "logList", "chart", "total", "threshold", "thresholdVal",
-    "cooldown", "cooldownVal", "muteToggle", "resetBtn", "shareBtn", "setupToggle", "setupBody"];
+    "cooldown", "cooldownVal", "resetBtn", "shareBtn", "setupToggle", "setupBody"];
   const els = {};
   ids.forEach((id) => { els[id] = document.getElementById(id); });
 
   const COUNTS = "sigh:counts";   // 두 버전 공유
   const LOG = "sigh:log";         // 두 버전 공유
   let tuneKey = "sigh:tune";      // 민감도/쿨다운/음소거는 엔진별로 분리
-  let threshold = 0.6, cooldownMs = 2500, muted = false, defaultThreshold = 0.6;
-  let lastSighTime = 0, audioCtx = null;
+  let threshold = 0.6, cooldownMs = 2500, defaultThreshold = 0.6;
+  let lastSighTime = 0;
 
-  const REACTIONS = ["또...?", "팀장님 괜찮으세요?", "후... 😮‍💨", "오늘도 시작됐다",
+  const REACTIONS = ["또...?", "괜찮으세요...?", "후... 😮‍💨", "오늘도 시작됐다",
     "한숨 적립 +1", "에너지 방출 감지", "🫠 녹는 중", "하아아~ 포착"];
 
   // ---- storage ----
@@ -23,24 +23,6 @@ const SighUI = (function () {
   const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
   const dateKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const todayKey = () => dateKey(new Date());
-
-  // ---- audio cue ----
-  function primeAudio() {
-    if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); }
-    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
-  }
-  function beep() {
-    if (muted || !audioCtx) return;
-    const t = audioCtx.currentTime, osc = audioCtx.createOscillator(), g = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(420, t);
-    osc.frequency.exponentialRampToValueAtTime(180, t + 0.35);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.25, t + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
-    osc.connect(g).connect(audioCtx.destination);
-    osc.start(t); osc.stop(t + 0.42);
-  }
 
   // ---- ui bits ----
   function setStatus(msg, kind) { els.status.textContent = msg; els.status.className = "status " + (kind || "idle"); }
@@ -88,7 +70,7 @@ const SighUI = (function () {
     const key = todayKey();
     const counts = load(COUNTS, {}); counts[key] = (counts[key] || 0) + 1; save(COUNTS, counts);
     const logs = load(LOG, {}); const arr = logs[key] || []; arr.push(Date.now()); logs[key] = arr.slice(-50); save(LOG, logs);
-    renderCount(); renderLog(); renderChart(); flash(); beep();
+    renderCount(); renderLog(); renderChart(); flash();
   }
   function feedScore(score) {
     if (typeof score !== "number" || isNaN(score)) score = 0;
@@ -98,17 +80,15 @@ const SighUI = (function () {
   }
 
   // ---- tuning persistence ----
-  function saveTune() { save(tuneKey, { threshold, cooldownMs, muted }); }
+  function saveTune() { save(tuneKey, { threshold, cooldownMs }); }
   function restoreTune() {
     const s = load(tuneKey, {});
     threshold = typeof s.threshold === "number" ? s.threshold : defaultThreshold;
     cooldownMs = typeof s.cooldownMs === "number" ? s.cooldownMs : 2500;
-    muted = typeof s.muted === "boolean" ? s.muted : false;
     els.threshold.value = Math.round(threshold * 100);
     els.thresholdVal.textContent = Math.round(threshold * 100) + "%";
     els.cooldown.value = cooldownMs;
     els.cooldownVal.textContent = (cooldownMs / 1000).toFixed(1) + "초";
-    els.muteToggle.checked = muted;
   }
 
   function wireCommon() {
@@ -118,13 +98,12 @@ const SighUI = (function () {
     els.cooldown.addEventListener("input", () => {
       cooldownMs = Number(els.cooldown.value); els.cooldownVal.textContent = (cooldownMs / 1000).toFixed(1) + "초"; saveTune();
     });
-    els.muteToggle.addEventListener("change", () => { muted = els.muteToggle.checked; saveTune(); });
     els.setupToggle && els.setupToggle.addEventListener("click", () => {
       const willOpen = els.setupBody.hidden; els.setupBody.hidden = !willOpen; els.setupToggle.setAttribute("aria-expanded", String(willOpen));
     });
     els.shareBtn.addEventListener("click", async () => {
       const n = (load(COUNTS, {})[todayKey()]) || 0;
-      const text = `📊 오늘 팀장님 한숨 ${n}회 적립 🫠 #한숨탐지기`;
+      const text = `📊 오늘 한숨 ${n}회 적립 🫠 #한숨탐지기`;
       try { await navigator.clipboard.writeText(text); setStatus("클립보드에 복사됨 → " + text, "ok"); } catch { setStatus(text, "idle"); }
     });
     els.resetBtn.addEventListener("click", () => {
@@ -140,6 +119,6 @@ const SighUI = (function () {
     restoreTune(); wireCommon(); renderCount(); renderLog(); renderChart();
   }
 
-  return { init, feedScore, updateMeter, setStatus, setHint, setTargetName, primeAudio, els };
+  return { init, feedScore, updateMeter, setStatus, setHint, setTargetName, els };
 })();
 window.SighUI = SighUI; // ES모듈(engine-yamnet.js)에서 전역 접근 보장

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🫠 팀장님 한숨 탐지기</title>
+  <title>🫠 한숨 탐지기</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="container">
     <header class="hero">
-      <h1>🫠 팀장님 한숨 탐지기</h1>
+      <h1>🫠 한숨 탐지기</h1>
       <p class="sub">사전학습 AI(YAMNet)로 한숨을 실시간 감지합니다. <b>학습 불필요</b> — 열고 [감지 시작]만 누르세요. 모든 처리는 브라우저 안에서만, 녹음은 전송되지 않습니다.</p>
     </header>
 
@@ -43,8 +43,7 @@
             <input id="cooldown" type="range" min="500" max="6000" step="250" value="2500" />
           </label>
         </div>
-        <label class="check"><input id="muteToggle" type="checkbox" /> 감지 효과음 끄기</label>
-        <p class="howto-lead">🎯 더 정확하게(팀장님 목소리 전용)? → <a href="custom.html">내 모델로 학습하는 정밀 버전</a></p>
+        <p class="howto-lead">🎯 더 정확하게? → <a href="custom.html">내 모델로 학습하는 정밀 버전</a></p>
       </div>
     </section>
 
@@ -63,7 +62,7 @@
 
     <!-- 카운터 -->
     <section id="counterCard" class="card counter">
-      <div class="counter-title">오늘 팀장님 한숨</div>
+      <div class="counter-title">오늘 한숨</div>
       <div class="counter-num"><span id="count">0</span><span class="unit">회</span></div>
       <div id="reaction" class="reaction"></div>
     </section>

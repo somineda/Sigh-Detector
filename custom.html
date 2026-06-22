@@ -10,7 +10,7 @@
   <main class="container">
     <header class="hero">
       <h1>🫠 한숨 탐지기 <span class="badge">정밀 버전</span></h1>
-      <p class="sub">Teachable Machine에서 직접 학습한 모델로 감지합니다. 정확도↑(팀장님 목소리·사무실 환경 전용), 대신 한 번의 녹음·학습이 필요해요.</p>
+      <p class="sub">Teachable Machine에서 직접 학습한 모델로 감지합니다. 정확도↑(내 목소리·환경 전용), 대신 한 번의 녹음·학습이 필요해요.</p>
     </header>
 
     <!-- 설정 (학습 버전) -->
@@ -46,7 +46,6 @@
             <input id="cooldown" type="range" min="500" max="6000" step="250" value="2500" />
           </label>
         </div>
-        <label class="check"><input id="muteToggle" type="checkbox" /> 감지 효과음 끄기</label>
         <p class="howto-lead">학습 귀찮으면 → <a href="index.html">학습 없이 바로 쓰는 버전(YAMNet)</a></p>
       </div>
     </section>
@@ -66,7 +65,7 @@
 
     <!-- 카운터 -->
     <section id="counterCard" class="card counter">
-      <div class="counter-title">오늘 팀장님 한숨</div>
+      <div class="counter-title">오늘 한숨</div>
       <div class="counter-num"><span id="count">0</span><span class="unit">회</span></div>
       <div id="reaction" class="reaction"></div>
     </section>

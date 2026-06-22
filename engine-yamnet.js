@@ -40,7 +40,6 @@ async function ensureClassifier() {
 
 async function start() {
   try {
-    SighUI.primeAudio();
     await ensureClassifier();
     // noiseSuppression은 반드시 끔 — 한숨(숨소리=노이즈성)이 지워질 수 있음
     stream = await navigator.mediaDevices.getUserMedia({

@@ -52,7 +52,6 @@ async function start() {
   if (!recognizer) { SighUI.setStatus("먼저 모델을 불러와줘 👆", "warn"); return; }
   if (targetIndex < 0) { SighUI.setStatus("감지할 라벨을 선택해줘", "warn"); return; }
   try {
-    SighUI.primeAudio();
     await recognizer.listen((result) => {
       if (!result.scores || targetIndex < 0) return;
       SighUI.feedScore(result.scores[targetIndex]);
