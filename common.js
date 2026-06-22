@@ -76,7 +76,8 @@ const SighUI = (function () {
     if (typeof score !== "number" || isNaN(score)) score = 0;
     updateMeter(score);
     const now = Date.now();
-    if (score >= threshold && now - lastSighTime > cooldownMs) { lastSighTime = now; registerSigh(); }
+    if (score >= threshold && now - lastSighTime > cooldownMs) { lastSighTime = now; registerSigh(); return true; }
+    return false;
   }
 
   // ---- tuning persistence ----

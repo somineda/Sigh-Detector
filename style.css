@@ -175,3 +175,12 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .howto-lead { font-size: 0.86rem; color: var(--muted); }
 .howto-lead b { color: var(--text); }
 .howto-lead a { color: var(--accent); text-decoration: underline; }
+
+/* score log (비교용) */
+.cap-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.cap-row input { flex: 1; min-width: 140px; }
+.scorelog { overflow-x: auto; }
+.scorelog .empty { color: var(--muted); font-size: 0.86rem; }
+.stable { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.stable th, .stable td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.stable th { color: var(--muted); font-weight: 600; }

@@ -82,6 +82,17 @@
       </section>
     </div>
 
+    <section class="card">
+      <h2>점수 기록 (비교용)</h2>
+      <div class="cap-row">
+        <input id="captureMemo" type="text" placeholder="메모 (예: 어~, 진짜 한숨)" />
+        <button id="captureBtn" class="btn">📸 현재 점수 기록</button>
+        <button id="exportScores" class="btn ghost">CSV</button>
+        <button id="clearScores" class="btn ghost danger">지우기</button>
+      </div>
+      <div id="scoreLog" class="scorelog"></div>
+    </section>
+
     <footer class="footer">
       <button id="shareBtn" class="btn ghost">📋 오늘 결과 복사</button>
       <button id="resetBtn" class="btn ghost danger">🗑 기록 초기화</button>
