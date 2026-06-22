@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🫠 한숨 탐지기 — 정밀(학습) 버전</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <h1>🫠 한숨 탐지기 <span class="badge">정밀 버전</span></h1>
+      <p class="sub">Teachable Machine에서 직접 학습한 모델로 감지합니다. 정확도↑(팀장님 목소리·사무실 환경 전용), 대신 한 번의 녹음·학습이 필요해요.</p>
+    </header>
+
+    <!-- 설정 (학습 버전) -->
+    <section class="card setup">
+      <button id="setupToggle" class="card-head" aria-expanded="true">
+        <span>⚙️ 설정 &amp; 모델 연결</span><span class="chev">▾</span>
+      </button>
+      <div id="setupBody" class="card-body">
+        <ol class="howto">
+          <li><a href="https://teachablemachine.withgoogle.com/train/audio" target="_blank" rel="noopener">Teachable Machine 오디오</a>에서 <b>한숨 / 말소리 / 배경소음</b> 클래스 녹음 후 Train</li>
+          <li><b>Export → TensorFlow.js → Upload(shareable link)</b> URL 복사</li>
+          <li>아래 붙여넣고 <b>모델 불러오기 → 감지 시작</b></li>
+        </ol>
+        <label class="field">
+          <span>Teachable Machine 모델 URL</span>
+          <div class="row">
+            <input id="modelUrl" type="text" placeholder="https://teachablemachine.withgoogle.com/models/XXXXXXXX/" />
+            <button id="loadBtn" class="btn">모델 불러오기</button>
+          </div>
+          <small>다운로드한 모델을 같이 올렸다면 <code>./내모델폴더/</code> 상대경로도 됩니다.</small>
+        </label>
+        <div id="labelRow" class="field" hidden>
+          <span>감지할 라벨 (한숨에 해당하는 클래스)</span>
+          <select id="labelSelect"></select>
+        </div>
+        <div class="sliders">
+          <label class="field">
+            <span>민감도 임계값 <b id="thresholdVal">75%</b> <small>(낮을수록 잘 잡지만 오탐↑)</small></span>
+            <input id="threshold" type="range" min="30" max="99" value="75" />
+          </label>
+          <label class="field">
+            <span>쿨다운 <b id="cooldownVal">2.5초</b> <small>(한 번의 한숨 중복 카운트 방지)</small></span>
+            <input id="cooldown" type="range" min="500" max="6000" step="250" value="2500" />
+          </label>
+        </div>
+        <label class="check"><input id="muteToggle" type="checkbox" /> 감지 효과음 끄기</label>
+        <p class="howto-lead">학습 귀찮으면 → <a href="index.html">학습 없이 바로 쓰는 버전(YAMNet)</a></p>
+      </div>
+    </section>
+
+    <!-- 상태 + 미터 -->
+    <section class="card">
+      <div class="controls">
+        <button id="toggleListen" class="btn primary">▶ 감지 시작</button>
+        <div id="status" class="status idle">모델 불러오고 감지 시작을 눌러줘</div>
+      </div>
+      <div class="meter">
+        <div class="meter-label">‘<span id="targetName">한숨</span>’ 확률 <b id="meterPct">0%</b></div>
+        <div class="meter-track"><div id="meterFill" class="meter-fill"></div></div>
+        <div id="hint" class="hint"></div>
+      </div>
+    </section>
+
+    <!-- 카운터 -->
+    <section id="counterCard" class="card counter">
+      <div class="counter-title">오늘 팀장님 한숨</div>
+      <div class="counter-num"><span id="count">0</span><span class="unit">회</span></div>
+      <div id="reaction" class="reaction"></div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2>최근 한숨 (오늘)</h2>
+        <ul id="logList" class="log"><li class="empty">아직 기록 없음</li></ul>
+      </section>
+      <section class="card">
+        <h2>최근 7일</h2>
+        <div id="chart" class="chart"></div>
+        <div class="total">누적 합계 <b id="total">0</b>회</div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <button id="shareBtn" class="btn ghost">📋 오늘 결과 복사</button>
+      <button id="resetBtn" class="btn ghost danger">🗑 기록 초기화</button>
+      <p class="note">마이크는 <b>HTTPS</b> 또는 <b>localhost</b>에서만 동작합니다.</p>
+    </footer>
+  </main>
+
+  <!-- Teachable Machine 오디오 모델 호환 버전 -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
+  <script src="common.js"></script>
+  <script src="engine-tm.js"></script>
+</body>
+</html>
