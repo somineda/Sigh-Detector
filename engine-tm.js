@@ -70,7 +70,7 @@ async function start() {
         .sort((a, b) => b.s - a.s).slice(0, 3)
         .map((p) => `${p.l} ${Math.round(p.s * 100)}%`);
       SighUI.setHint("지금: " + top.join(" · "));
-      if (SighUI.feedScore(result.scores[targetIndex])) logSnapshot("감지됨");
+      if (SighUI.feedScore(result.scores[targetIndex])) logSnapshot("", "감지");
     }, { includeSpectrogram: false, probabilityThreshold: 0, invokeCallbackOnNoiseAndUnknown: true, overlapFactor: 0.75 });
     listening = true;
     toggleBtn.textContent = "⏹ 감지 중지"; toggleBtn.classList.add("on");
@@ -98,30 +98,48 @@ toggleBtn.addEventListener("click", () => { listening ? stop() : start(); });
 
 // ===== 점수 기록 (비교용) =====
 function loadScoreLog() { try { return JSON.parse(localStorage.getItem(SCORELOG)) || []; } catch { return []; } }
-function saveScoreLog(arr) { localStorage.setItem(SCORELOG, JSON.stringify(arr.slice(-100))); }
+function saveScoreLog(arr) { localStorage.setItem(SCORELOG, JSON.stringify(arr.slice(-200))); }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 function peakSnapshot() {
   const peak = labelsCache.map(() => 0);
   recent.forEach((f) => f.scores.forEach((s, i) => { if (s > peak[i]) peak[i] = s; }));
   return peak;
 }
-function logSnapshot(memo) {
+function logSnapshot(memo, kind) {
   if (!labelsCache.length || !recent.length) return;
   const peak = peakSnapshot();
   const arr = loadScoreLog();
-  arr.push({ t: Date.now(), memo: memo || "", labels: labelsCache.slice(), scores: peak.map((s) => Math.round(s * 100)) });
+  arr.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    t: Date.now(), kind: kind || "수동", memo: memo || "",
+    labels: labelsCache.slice(), scores: peak.map((s) => Math.round(s * 100)),
+  });
   saveScoreLog(arr);
-  renderScoreLog();
+  // 메모 입력 중이면 포커스 안 뺏기게 다시 그리지 않음 (데이터는 이미 저장됨)
+  const a = document.activeElement;
+  if (!(a && a.classList && a.classList.contains("memo-edit"))) renderScoreLog();
+}
+function updateMemo(id, memo) {
+  const arr = loadScoreLog();
+  const e = arr.find((x) => x.id === id);
+  if (e) { e.memo = memo; saveScoreLog(arr); }
 }
 function renderScoreLog() {
   if (!scoreLogEl) return;
   const arr = loadScoreLog().slice().reverse();
-  if (!arr.length) { scoreLogEl.innerHTML = '<p class="empty">기록 없음 — 소리 내고 [📸 현재 점수 기록]을 눌러봐 (한숨으로 감지될 때도 자동 기록됨)</p>'; return; }
+  if (!arr.length) { scoreLogEl.innerHTML = '<p class="empty">기록 없음 — 한숨이 감지되면 자동 저장돼. [📸 현재 점수 기록]으로 직접 추가도 가능. 저장된 행은 메모/✅❌로 라벨링하세요.</p>'; return; }
   const labels = arr[0].labels || [];
-  const head = "<tr><th>시간</th><th>메모</th>" + labels.map((l) => `<th>${l}</th>`).join("") + "</tr>";
+  const head = "<tr><th>시간</th><th>종류</th><th>메모/라벨</th><th></th>" + labels.map((l) => `<th>${esc(l)}</th>`).join("") + "</tr>";
   const rows = arr.map((e) => {
     const d = new Date(e.t);
     const tm = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
-    return `<tr><td>${tm}</td><td>${e.memo || "-"}</td>${e.scores.map((v) => `<td>${v}%</td>`).join("")}</tr>`;
+    const cells = e.scores.map((v) => `<td>${v}%</td>`).join("");
+    return `<tr>` +
+      `<td>${tm}</td>` +
+      `<td><span class="kind ${e.kind === "감지" ? "k-auto" : "k-man"}">${esc(e.kind)}</span></td>` +
+      `<td><input class="memo-edit" data-id="${e.id}" value="${esc(e.memo)}" placeholder="진짜 한숨? 딴소리?" /></td>` +
+      `<td class="tagbtns"><button data-id="${e.id}" data-tag="진짜 한숨" title="진짜 한숨">✅</button><button data-id="${e.id}" data-tag="딴소리" title="딴소리(오탐)">❌</button></td>` +
+      cells + `</tr>`;
   }).join("");
   scoreLogEl.innerHTML = `<table class="stable">${head}${rows}</table>`;
 }
@@ -129,19 +147,27 @@ function exportScoresCSV() {
   const arr = loadScoreLog();
   if (!arr.length) { SighUI.setStatus("기록이 없어", "warn"); return; }
   const labels = arr[arr.length - 1].labels || [];
-  const header = ["time", "memo", ...labels].join(",");
-  const lines = arr.map((e) => [new Date(e.t).toISOString(), `"${(e.memo || "").replace(/"/g, '""')}"`, ...e.scores].join(","));
-  const blob = new Blob([header + "\n" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const header = ["time", "kind", "memo", ...labels].join(",");
+  const lines = arr.map((e) => [new Date(e.t).toISOString(), e.kind, `"${(e.memo || "").replace(/"/g, '""')}"`, ...e.scores].join(","));
+  const blob = new Blob(["﻿" + header + "\n" + lines.join("\n")], { type: "text/csv;charset=utf-8" }); // BOM: 엑셀 한글
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a"); a.href = url; a.download = "sigh-scores.csv"; a.click();
   URL.revokeObjectURL(url);
 }
 captureBtn && captureBtn.addEventListener("click", () => {
   if (!listening) { SighUI.setStatus("감지 중일 때 눌러줘 (소리 낸 직후)", "warn"); return; }
-  logSnapshot(captureMemo ? captureMemo.value.trim() : "");
+  logSnapshot(captureMemo ? captureMemo.value.trim() : "", "수동");
 });
 exportScores && exportScores.addEventListener("click", exportScoresCSV);
 clearScores && clearScores.addEventListener("click", () => { if (confirm("점수 기록을 지울까?")) { saveScoreLog([]); renderScoreLog(); } });
+scoreLogEl && scoreLogEl.addEventListener("input", (ev) => {
+  const t = ev.target;
+  if (t.classList && t.classList.contains("memo-edit")) updateMemo(t.dataset.id, t.value);
+});
+scoreLogEl && scoreLogEl.addEventListener("click", (ev) => {
+  const b = ev.target.closest && ev.target.closest("button[data-tag]");
+  if (b) { updateMemo(b.dataset.id, b.dataset.tag); renderScoreLog(); }
+});
 renderScoreLog();
 
 // 저장된 모델 자동 로드(마이크는 시작 버튼 눌러야 켜짐)

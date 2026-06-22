@@ -184,3 +184,10 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .stable { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
 .stable th, .stable td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .stable th { color: var(--muted); font-weight: 600; }
+.stable .memo-edit { width: 100%; min-width: 110px; background: var(--card2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 5px 8px; font-size: 0.8rem; }
+.stable .memo-edit:focus { outline: none; border-color: var(--accent); }
+.tagbtns { white-space: nowrap; }
+.tagbtns button { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; cursor: pointer; font-size: 0.8rem; }
+.tagbtns button:hover { border-color: var(--accent); }
+.kind { font-size: 0.72rem; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.kind.k-auto { color: var(--text); border-color: #3a3a3a; }
