@@ -14,16 +14,21 @@ let classifier = null;
 let listening = false;
 let audioCtx = null, stream = null, source = null, processor = null, zeroGain = null;
 let ring = null, ringSize = 0, writePos = 0, filled = 0, timer = null;
-let keyword = (keywordInput && keywordInput.value.trim()) || "Sigh";
+let keywords = parseKeywords(keywordInput && keywordInput.value);
 
-SighUI.init({ tuneKey: "sigh:tune:yamnet", defaultThreshold: 0.30 });
-SighUI.setTargetName(keyword);
+function parseKeywords(str) {
+  const list = (str || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return list.length ? list : ["sigh"];
+}
+
+SighUI.init({ tuneKey: "sigh:tune:yamnet", defaultThreshold: 0.15 });
+SighUI.setTargetName((keywordInput && keywordInput.value.trim()) || "Sigh");
 SighUI.setStatus("준비 완료 — [감지 시작]을 누르면 마이크로 바로 감지해 (학습 불필요)", "idle");
 
 if (keywordInput) {
   keywordInput.addEventListener("change", () => {
-    keyword = keywordInput.value.trim() || "Sigh";
-    SighUI.setTargetName(keyword);
+    keywords = parseKeywords(keywordInput.value);
+    SighUI.setTargetName(keywordInput.value.trim() || "Sigh");
   });
 }
 
@@ -82,9 +87,8 @@ function classifyTick() {
   if (!results || !results.length) return;
   const cats = results[results.length - 1].classifications[0].categories;
   if (cats.length) SighUI.setHint(`지금: ${cats[0].categoryName} ${Math.round(cats[0].score * 100)}%`);
-  const kw = keyword.toLowerCase();
-  const hit = cats.find((c) => c.categoryName.toLowerCase().includes(kw));
-  SighUI.feedScore(hit ? hit.score : 0);
+  const matched = cats.filter((c) => keywords.some((k) => c.categoryName.toLowerCase().includes(k)));
+  SighUI.feedScore(matched.length ? Math.max(...matched.map((c) => c.score)) : 0);
 }
 
 function stop() {

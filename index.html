@@ -21,8 +21,8 @@
       <div id="setupBody" class="card-body">
         <p class="howto-lead">✅ <b>녹음·학습 없이 바로 동작</b>합니다. 처음 시작할 때 모델(약 4MB)을 한 번 내려받아요.</p>
         <label class="field">
-          <span>감지할 소리 (AudioSet 라벨, 기본 = Sigh)</span>
-          <input id="keyword" type="text" value="Sigh" list="kwlist" />
+          <span>감지할 소리 (AudioSet 라벨 · 쉼표로 여러 개)</span>
+          <input id="keyword" type="text" value="Sigh, Breathing" list="kwlist" />
           <datalist id="kwlist">
             <option value="Sigh">한숨</option>
             <option value="Breathing">숨소리</option>
@@ -31,12 +31,12 @@
             <option value="Laughter">웃음</option>
             <option value="Speech">말소리</option>
           </datalist>
-          <small>영문 라벨 일부만 입력해도 됩니다(예: <code>sigh</code>). 한숨이 잘 안 잡히면 아래 민감도를 조절하세요.</small>
+          <small>여러 라벨을 쉼표로(기본 <code>Sigh, Breathing</code>) — YAMNet은 한숨을 <code>Breathing</code>으로 분류하는 경우가 많아요. 안 잡히면 민감도를 더 낮추세요.</small>
         </label>
         <div class="sliders">
           <label class="field">
-            <span>민감도 임계값 <b id="thresholdVal">30%</b> <small>(낮을수록 잘 잡지만 오탐↑)</small></span>
-            <input id="threshold" type="range" min="5" max="95" value="30" />
+            <span>민감도 임계값 <b id="thresholdVal">15%</b> <small>(낮을수록 잘 잡지만 오탐↑)</small></span>
+            <input id="threshold" type="range" min="5" max="95" value="15" />
           </label>
           <label class="field">
             <span>쿨다운 <b id="cooldownVal">2.5초</b> <small>(한 번의 한숨 중복 카운트 방지)</small></span>

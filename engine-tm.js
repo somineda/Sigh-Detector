@@ -52,9 +52,14 @@ async function start() {
   if (!recognizer) { SighUI.setStatus("먼저 모델을 불러와줘 👆", "warn"); return; }
   if (targetIndex < 0) { SighUI.setStatus("감지할 라벨을 선택해줘", "warn"); return; }
   try {
+    const labels = recognizer.wordLabels();
     await recognizer.listen((result) => {
       if (!result.scores || targetIndex < 0) return;
       SighUI.feedScore(result.scores[targetIndex]);
+      const top = labels.map((l, i) => ({ l, s: result.scores[i] }))
+        .sort((a, b) => b.s - a.s).slice(0, 3)
+        .map((p) => `${p.l} ${Math.round(p.s * 100)}%`);
+      SighUI.setHint("지금: " + top.join(" · "));
     }, { includeSpectrogram: false, probabilityThreshold: 0, invokeCallbackOnNoiseAndUnknown: true, overlapFactor: 0.75 });
     listening = true;
     toggleBtn.textContent = "⏹ 감지 중지"; toggleBtn.classList.add("on");
