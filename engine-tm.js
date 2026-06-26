@@ -55,6 +55,20 @@ function populateLabels(labels) {
   labelRow.hidden = false;
 }
 
+// ===== 오탐 필터: 말소리가 1등이고 '한숨' 점수가 낮으면 무시 =====
+// 근거(점수기록 분석): 진짜 한숨은 배경소음과 함께 높게 잡혀서 '배경소음 1등'은 제외하지 않음.
+//                     반면 '말소리 1등' 프레임은 대부분 그냥 말한 것(오탐)이었음.
+const FP_FILTER = true;        // 필터 끄려면 false
+const FP_SIGH_BELOW = 0.50;    // 한숨 점수가 이 값 미만일 때만 무시 (이상이면 한숨으로 인정)
+const SPEECH_RE = /말소리|말|speech|voice|talk/i;
+function argmax(a) { let m = 0; for (let i = 1; i < a.length; i++) if (a[i] > a[m]) m = i; return m; }
+function isSpeechFalsePositive(scores, labels) {
+  if (!FP_FILTER) return false;
+  const si = labels.findIndex((l) => SPEECH_RE.test(l));
+  if (si < 0 || si === targetIndex) return false;   // 말소리 라벨이 없거나 타깃과 같으면 필터 비활성
+  return argmax(scores) === si && scores[targetIndex] < FP_SIGH_BELOW;
+}
+
 async function start() {
   if (!recognizer) { SighUI.setStatus("먼저 모델을 불러와줘 👆", "warn"); return; }
   if (targetIndex < 0) { SighUI.setStatus("감지할 라벨을 선택해줘", "warn"); return; }
@@ -69,8 +83,14 @@ async function start() {
       const top = labels.map((l, i) => ({ l, s: result.scores[i] }))
         .sort((a, b) => b.s - a.s).slice(0, 3)
         .map((p) => `${p.l} ${Math.round(p.s * 100)}%`);
-      SighUI.setHint("지금: " + top.join(" · "));
-      if (SighUI.feedScore(result.scores[targetIndex])) logSnapshot("", "감지");
+      const sighScore = result.scores[targetIndex];
+      if (isSpeechFalsePositive(result.scores, labels)) {
+        SighUI.setHint("지금: " + top.join(" · ") + "  ·  ⏸ 말소리로 판단 → 무시");
+        SighUI.updateMeter(sighScore);            // 미터만 갱신, 카운트는 안 함
+      } else {
+        SighUI.setHint("지금: " + top.join(" · "));
+        if (SighUI.feedScore(sighScore)) logSnapshot("", "감지");
+      }
     }, { includeSpectrogram: false, probabilityThreshold: 0, invokeCallbackOnNoiseAndUnknown: true, overlapFactor: 0.75 });
     listening = true;
     toggleBtn.textContent = "⏹ 감지 중지"; toggleBtn.classList.add("on");
